@@ -1,0 +1,186 @@
+#include <SFML/Graphics.hpp>
+#include <iostream>
+using namespace sf; 
+using namespace std;
+
+
+
+struct character {
+	Sprite bird;
+	Texture birdtxt;
+	Clock jumptimer;
+	Clock gravity;
+}flappy;
+
+
+int main() {
+	RenderWindow window(VideoMode(750, 980), "flappy bird");
+	Sprite title;
+	Texture titletxt;
+	titletxt.loadFromFile("title.png");
+	title.setTexture(titletxt);
+	title.setPosition(Vector2f(55, 980 / 8));
+	Sprite menubackground;
+	Texture menubackgroundtxt;
+	Sprite playbutton;
+	Texture playtxt;
+	Sprite sky;
+	Texture skytxt;
+	skytxt.loadFromFile("sky2.png");
+	sky.setTexture(skytxt);
+	Sprite floor[2];
+	Texture floortxt;
+	floortxt.loadFromFile("land.png");
+	for (int i = 0;i < 2;i++) {
+		floor[i].setTexture(floortxt);
+		floor[i].setScale(Vector2f(1, 1.25));
+	}
+	floor[0].setPosition(Vector2f(0, 680));
+	floor[1].setPosition(Vector2f(730, 680));
+	
+	flappy.birdtxt.loadFromFile("bird1.png");
+	flappy.bird.setTexture(flappy.birdtxt);
+	flappy.bird.setPosition(310, 350);
+	sky.setPosition(Vector2f(0, -300));
+	playbutton.setPosition(Vector2f(750/3.5, 980 / 2));
+	playtxt.loadFromFile("playbutton.png");
+	playbutton.setTexture(playtxt);
+	menubackgroundtxt.loadFromFile("sky.png");
+	menubackground.setTexture(menubackgroundtxt);
+	int pagenum = 1000;
+	Clock clk;
+	bool isjumping;
+	bool firstenteredgame = false;
+
+
+	if (pagenum == 1000) {
+		while (window.isOpen())
+		{
+			Event event;
+			while (window.pollEvent(event)) {
+				if (event.type == Event::Closed) {
+					window.close();
+				}
+				if (Keyboard::isKeyPressed(Keyboard::Enter)) {
+					pagenum = 1;
+				}
+				
+				
+				
+			}
+			window.clear();
+			if (pagenum != 1000) {
+				break;
+			}
+			window.draw(menubackground);
+			window.draw(title);
+			window.draw(playbutton);
+			window.display();
+
+		}
+	}
+	if (pagenum == 1) {
+		RenderWindow window(VideoMode(750, 980), "flappy bird");
+		window.setFramerateLimit(30);
+		firstenteredgame = true;
+		
+		while (window.isOpen())
+		{
+			if (firstenteredgame) {
+				isjumping = false;
+				firstenteredgame = false;
+				flappy.jumptimer.restart();
+			
+			}
+			Event event;
+			while (window.pollEvent(event)) {
+				if (event.type == Event::Closed) {
+					window.close();
+				}
+			
+ 
+				
+				
+
+
+
+			}
+			if (Keyboard::isKeyPressed(Keyboard::Space)) {
+						for (int i = 0;i < 2;i++) {
+							floor[i].move(Vector2f(-10, 0));
+						}
+						flappy.bird.move(0, -30);
+						isjumping = true;
+						flappy.jumptimer.restart();
+						flappy.gravity.restart();
+					}
+					if (clk.getElapsedTime().asSeconds() >=0.25) {
+						isjumping = false;
+						clk.restart();
+					}
+					if (!isjumping) {
+						flappy.bird.move(0, flappy.jumptimer.getElapsedTime().asSeconds() * 20);
+					}
+
+
+			
+
+			if (floor[0].getPosition().x <= -750) {
+				floor[0].setPosition(Vector2f(710, 680));
+			}
+			else if (floor[1].getPosition().x <= -750) {
+				floor[1].setPosition(Vector2f(710, 680));
+			}
+			window.clear();
+			window.draw(sky);
+			for (int i = 0;i < 2;i++) {
+				window.draw(floor[i]);
+			}
+			window.draw(flappy.bird);
+			window.display();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		}
+	}
+
+
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
