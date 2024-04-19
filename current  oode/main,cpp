@@ -8,8 +8,8 @@ using namespace std;
 struct character {
 	Sprite bird;
 	Texture birdtxt;
-	Clock jumptimer;
-	Clock gravity;
+	Clock jumptimer; //for accerleration while jumping
+	
 }flappy;
 
 
@@ -37,7 +37,7 @@ int main() {
 	}
 	floor[0].setPosition(Vector2f(0, 680));
 	floor[1].setPosition(Vector2f(730, 680));
-	
+	// two floors for endless run
 	flappy.birdtxt.loadFromFile("bird1.png");
 	flappy.bird.setTexture(flappy.birdtxt);
 	flappy.bird.setPosition(310, 350);
@@ -47,13 +47,13 @@ int main() {
 	playbutton.setTexture(playtxt);
 	menubackgroundtxt.loadFromFile("sky.png");
 	menubackground.setTexture(menubackgroundtxt);
-	int pagenum = 1000;
-	Clock clk;
+	int pagenum = 1000; //to transition for main menu to main game
+	Clock clk; // jump delay
 	bool isjumping;
 	bool firstenteredgame = false;
 
 
-	if (pagenum == 1000) {
+	if (pagenum == 1000) { //main menu
 		while (window.isOpen())
 		{
 			Event event;
@@ -79,7 +79,7 @@ int main() {
 
 		}
 	}
-	if (pagenum == 1) {
+	if (pagenum == 1) { //main game
 		RenderWindow window(VideoMode(750, 980), "flappy bird");
 		window.setFramerateLimit(30);
 		firstenteredgame = true;
@@ -112,7 +112,7 @@ int main() {
 						flappy.bird.move(0, -30);
 						isjumping = true;
 						flappy.jumptimer.restart();
-						flappy.gravity.restart();
+						
 					}
 					if (clk.getElapsedTime().asSeconds() >=0.25) {
 						isjumping = false;
