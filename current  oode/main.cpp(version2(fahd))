@@ -1,0 +1,242 @@
+#include <SFML/Graphics.hpp>
+#include <iostream>
+using namespace sf; 
+using namespace std;
+
+void pipedownspawn(Sprite pipedown[5]) {
+	for (int i = 0;i < 5;i++) {
+		if (pipedown[i].getPosition().x <= 750) {
+			pipedown[i + 1].setPosition(750, -200);
+		}
+	}
+}
+
+struct character {
+	Sprite bird;
+	Texture birdtxt;
+	Clock jumptimer;
+	
+}flappy;
+
+
+int main() {
+	RenderWindow window(VideoMode(750, 800), "flappy bird");
+	Sprite title;
+	Texture titletxt;
+	titletxt.loadFromFile("title.png");
+	title.setTexture(titletxt);
+	title.setPosition(Vector2f(55, 980 / 8));
+	Sprite menubackground;
+	Texture menubackgroundtxt;
+	Sprite playbutton;
+	Texture playtxt;
+	Sprite sky;
+	Texture skytxt;
+	skytxt.loadFromFile("sky2.png");
+	sky.setTexture(skytxt);
+	Sprite floor[2];
+	Texture floortxt;
+	floortxt.loadFromFile("land.png");
+	for (int i = 0;i < 2;i++) {
+		floor[i].setTexture(floortxt);
+		floor[i].setScale(Vector2f(1, 1.25));
+	}
+	floor[0].setPosition(Vector2f(0, 680));
+	floor[1].setPosition(Vector2f(730, 680));
+	int x=0;
+	flappy.birdtxt.loadFromFile("flappy bird spritesheet.png");
+	flappy.bird.setTexture(flappy.birdtxt);
+	flappy.bird.setTextureRect(IntRect(0, 0, 77, 54));
+	flappy.bird.setPosition(310, 350);
+	flappy.bird.setScale(0.75, 0.75);
+	sky.setPosition(Vector2f(0, -300));
+	playbutton.setPosition(Vector2f(750/3.5, 980 / 2));
+	playtxt.loadFromFile("playbutton.png");
+	playbutton.setTexture(playtxt);
+	menubackgroundtxt.loadFromFile("sky.png");
+	menubackground.setTexture(menubackgroundtxt);
+	Sprite pipeup[5];
+	Texture uppipe;
+	uppipe.loadFromFile("pipeup.png");
+	for (int i = 0;i < 5;i++) {
+		pipeup[i].setTexture(uppipe);
+		pipeup[i].setScale(1.25, 1);
+	}
+	pipeup[0].setPosition(900, 323);
+	Sprite pipedown[5];
+	Texture downpipe;
+	downpipe.loadFromFile("pipedown.png");
+	for (int i = 0;i < 5;i++) {
+		pipedown[i].setTexture(downpipe);
+		pipedown[i].setScale(1.25, 1);
+	}
+	pipedown[0].setPosition(900, -200);
+	for (int i = 1;i < 5;i++) {
+		pipeup[i].setPosition(-1000, 1000);
+		pipedown[i].setPosition(10000, -200);
+	}
+	int pagenum = 1000;
+	Clock clk;
+	bool isjumping;
+	bool firstenteredgame = false;
+	bool floormoving = false;
+	bool pipemoving = false;
+
+	if (pagenum == 1000) {
+		while (window.isOpen())
+		{
+			Event event;
+			while (window.pollEvent(event)) {
+				if (event.type == Event::Closed) {
+					window.close();
+				}
+				if (Keyboard::isKeyPressed(Keyboard::Enter)) {
+					pagenum = 1;
+				}
+				
+				
+				
+			}
+			window.clear();
+			if (pagenum != 1000) {
+				break;
+			}
+			window.draw(menubackground);
+			window.draw(title);
+			window.draw(playbutton);
+			window.display();
+
+		}
+	}
+	if (pagenum == 1) {
+		RenderWindow window(VideoMode(750, 980), "flappy bird");
+		window.setFramerateLimit(30);
+		firstenteredgame = true;
+		
+		while (window.isOpen())
+		{
+			if (firstenteredgame) {
+				isjumping = false;
+				firstenteredgame = false;
+				flappy.jumptimer.restart();
+				floormoving = true;
+				pipemoving = true;
+			}
+			Event event;
+			while (window.pollEvent(event)) {
+				if (event.type == Event::Closed) {
+					window.close();
+				}
+			
+ 
+				
+				
+
+
+
+			}
+		
+			if (pipemoving) {
+				for (int i = 0;i < 5;i++) {
+
+					pipeup[i].move(-7, 0);
+					pipedown[i].move(-7, 0);
+				
+
+				}
+				
+				
+			}
+			pipedownspawn(pipedown);
+			if (floormoving) {
+				for (int i = 0;i < 2;i++) {
+					floor[i].move(Vector2f(-7, 0));
+				}
+			}
+			flappy.bird.setTextureRect(IntRect(x * 77, 0, 77, 54));
+			x++;
+			x %= 4;
+			
+			if (Keyboard::isKeyPressed(Keyboard::Space)) {
+					
+						flappy.bird.move(0, -30);
+						
+						isjumping = true;
+						flappy.jumptimer.restart();
+					
+					}
+					if (clk.getElapsedTime().asSeconds() >=0.25) {
+						isjumping = false;
+						clk.restart();
+					}
+					if (!isjumping) {
+						flappy.bird.move(0, flappy.jumptimer.getElapsedTime().asSeconds() * 20);
+					}
+
+
+			
+
+			if (floor[0].getPosition().x <= -750) {
+				floor[0].setPosition(Vector2f(710, 680));
+			}
+			else if (floor[1].getPosition().x <= -750) {
+				floor[1].setPosition(Vector2f(710, 680));
+			}
+			window.clear();
+			window.draw(sky);
+			for (int i = 0;i < 5;i++) {
+				window.draw(pipeup[i]);
+				window.draw(pipedown[i]);
+			}
+			for (int i = 0;i < 2;i++) {
+				window.draw(floor[i]);
+			}
+			window.draw(flappy.bird);
+			window.display();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		}
+	}
+
+
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
