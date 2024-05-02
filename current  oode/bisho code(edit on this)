@@ -2,30 +2,29 @@
 #include <iostream>
 #include<ctime>
 #include<vector>
+#include <random>
+
+
 using namespace sf;
 using namespace std;
-void pipeupspawn(Sprite pipeup[5]) {
+void pipespawn(Sprite pipeup[5], Sprite pipedown[5]) {
     for (int i = 0; i < 5; i++) {
+        random_device rd;
+        mt19937 mt(rd());
+        uniform_real_distribution<double> dist(150, 500);
+        int up = dist(mt);
+        int down = up + 500;
         if (pipeup[i].getPosition().x <= -100) {
-            // Randomize the y-coordinate within a certain range
-            int randomY = rand() % 150 + 400; // Adjust the range as needed
-            pipeup[i].setPosition(1350, randomY);
+            pipeup[i].setPosition(1350, up);
         }
-    }
-}
-void pipedownspawn(Sprite pipedown[5]) {
-
- for (int i = 0; i < 5; i++) {
         if (pipedown[i].getPosition().x <= -100) {
-            // Randomize the y-coordinate within a certain range
-            int randomY = rand() % 150 - 200; // Adjust the range as needed
-            pipedown[i].setPosition(1350, randomY);
+            pipedown[i].setPosition(1350, down);
         }
     }
 }
 struct Character {
     Sprite bird;
-    Texture birdTxt;
+    Texture birdTxt1;
     Clock jumpTimer; // for acceleration while jumping
     Vector2f velocity;
 
@@ -36,13 +35,18 @@ struct Character {
 int main() {
     RenderWindow window(VideoMode(750, 980), "Flappy Bird");
     srand(time(NULL));
+    int x = 0;
     // Load assets
     Texture birdTxt, floorTxt, skyTxt, titletxt, menubackgroundtxt, playtxt;
     Sprite title;
     Sprite playbutton;
     Sprite menubackground;
     playbutton.setPosition(Vector2f(750 / 3.5, 980 / 2));
-    birdTxt.loadFromFile("bird1.png");
+    flappy.birdTxt1.loadFromFile("flappy bird spritesheet.png");
+    flappy.bird.setTexture(flappy.birdTxt1);
+    flappy.bird.setTextureRect(IntRect(0, 0, 77, 54));
+    flappy.bird.setPosition(310, 350);
+    flappy.bird.setScale(0.75, 0.75);
     titletxt.loadFromFile("title.png");
     floorTxt.loadFromFile("land.png");
     skyTxt.loadFromFile("sky2.png");
@@ -59,32 +63,34 @@ int main() {
     uppipe.loadFromFile("pipeup.png");
     for (int i = 0; i < 5; i++) {
         pipeup[i].setTexture(uppipe);
-        pipeup[i].setScale(1.25, 1);
+        pipeup[i].setScale(1.25, 1.5);
+        pipeup[i].setOrigin(0, 0);
     }
-    pipeup[0].setPosition(900, 323);
-    pipeup[1].setPosition(1200, 323);
-    pipeup[2].setPosition(1500, 323);
-    pipeup[3].setPosition(1800, 323);
-    pipeup[4].setPosition(2100, 323);
+    random_device rd;
+    mt19937 mt(rd());
+    uniform_real_distribution<double> dist(150, 500);
+    int up = dist(mt);
+    int down = up + 500;
+    pipeup[0].setPosition(900, up);
+    pipeup[1].setPosition(1200, up);
+    pipeup[2].setPosition(1500, up);
+    pipeup[3].setPosition(1800, up);
+    pipeup[4].setPosition(2100, up);
     Sprite pipedown[5];
     Texture downpipe;
     downpipe.loadFromFile("pipedown.png");
     for (int i = 0; i < 5; i++) {
         pipedown[i].setTexture(downpipe);
-        pipedown[i].setScale(1.25, 1);
+        pipedown[i].setScale(1.25, 1.5);
+        pipedown[i].setOrigin(0, 800);
     }
-    pipedown[0].setPosition(900, -200);
-    pipedown[1].setPosition(1200, -200);
-    pipedown[2].setPosition(1500, -200);
-    pipedown[3].setPosition(1800, -200);
-    pipedown[4].setPosition(2100, -200);
+    pipedown[0].setPosition(900, down);
+    pipedown[1].setPosition(1200, down);
+    pipedown[2].setPosition(1500, down);
+    pipedown[3].setPosition(1800, down);
+    pipedown[4].setPosition(2100, down);
     
 
-
-    flappy.birdTxt = birdTxt;
-    flappy.bird.setTexture(flappy.birdTxt);
-    flappy.bird.setPosition(310, 350);
-    flappy.bird.setScale(0.8,0.8);
 
     Sprite floor[2], sky;
     floor[0].setTexture(floorTxt);
@@ -160,23 +166,25 @@ int main() {
             if (pipemoving) {
                 for (int i = 0; i < 5; i++) {
 
-                    pipeup[i].move(-2, 0);
-                    pipedown[i].move(-2, 0);
+                    pipeup[i].move(-1, 0);
+                    pipedown[i].move(-1, 0);
 
 
                 }
 
             }
-            pipeupspawn(pipeup);
-            pipedownspawn(pipedown);
+                        pipespawn(pipeup, pipedown);
+
             
             // Floor movement
             for (int i = 0; i < 2; ++i) {
-                floor[i].move(-2, 0);
+                floor[i].move(-1, 0);
                 if (floor[i].getPosition().x <= -750)
                     floor[i].setPosition(Vector2f(710, 680));
             }
-            
+            flappy.bird.setTextureRect(IntRect(x * 77, 0, 77, 54));
+            x++;
+            x %= 4;
 
             // Bird collision with floor
             if (flappy.bird.getPosition().y + flappy.bird.getGlobalBounds().height >= floor[0].getPosition().y) {
@@ -234,3 +242,6 @@ int main() {
     }
 
 }
+
+
+
