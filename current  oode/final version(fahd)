@@ -1,0 +1,352 @@
+#include<SFML/Graphics.hpp>
+#include <iostream>
+#include<ctime>
+#include<vector>
+#include <random>
+#include <sstream> 
+
+using namespace sf;
+using namespace std;
+void pipespawn(Sprite pipeup[5], Sprite pipedown[5]) {
+    for (int i = 0; i < 5; i++) {
+        random_device rd;
+        mt19937 mt(rd());
+        uniform_real_distribution<double> dist(130, 600);
+        int up = dist(mt);
+        int down = up + 500;
+        if (pipeup[i].getPosition().x <= -100) {
+            pipeup[i].setPosition(1350, up);
+        }
+        if (pipedown[i].getPosition().x <= -100) {
+            pipedown[i].setPosition(1350, down);
+        }
+    }
+}
+struct Character {
+    Sprite bird;
+    Texture birdTxt1;
+    Clock jumpTimer; // for acceleration while jumping
+    Vector2f velocity;
+
+} flappy;
+
+
+
+int main() {
+    RenderWindow window(VideoMode(750, 980), "Flappy Bird");
+    srand(time(NULL));
+    int x = 0;
+    // Load assets
+    Texture birdTxt, floorTxt, skyTxt, titletxt, menubackgroundtxt, playtxt;
+    Sprite title;
+    Sprite playbutton;
+    Sprite menubackground;
+    playbutton.setPosition(Vector2f(750 / 3.5, 980 / 2));
+    flappy.birdTxt1.loadFromFile("flappy bird spritesheet.png");
+    flappy.bird.setTexture(flappy.birdTxt1);
+    flappy.bird.setTextureRect(IntRect(0, 0, 77, 54));
+    flappy.bird.setPosition(310, 350);
+    flappy.bird.setScale(0.75, 0.75);
+    titletxt.loadFromFile("title.png");
+    floorTxt.loadFromFile("land.png");
+    skyTxt.loadFromFile("sky2.png");
+    playtxt.loadFromFile("playbutton.png");
+    playbutton.setTexture(playtxt);
+    menubackgroundtxt.loadFromFile("sky.png");
+    menubackground.setTexture(menubackgroundtxt);
+    title.setTexture(titletxt);
+    title.setPosition(Vector2f(55, 980 / 8));
+    int pagenum = 1000; //to transition for main menu to main game
+    bool firstenteredgame = false;
+    Sprite pipeup[5];
+    Texture uppipe;
+    uppipe.loadFromFile("pipeup.png");
+    for (int i = 0; i < 5; i++) {
+        pipeup[i].setTexture(uppipe);
+        pipeup[i].setScale(1.25, 1.5);
+        pipeup[i].setOrigin(0, 0);
+    }
+    random_device rd;
+    mt19937 mt(rd());
+    uniform_real_distribution<double> dist(150, 500);
+    int up = dist(mt);
+    int down = up + 500;
+    pipeup[0].setPosition(900, 250);
+    pipeup[1].setPosition(1200, 500);
+    pipeup[2].setPosition(1500, 300);
+    pipeup[3].setPosition(1800, 250);
+    pipeup[4].setPosition(2100, 400);
+    Sprite pipedown[5];
+    Texture downpipe;
+    downpipe.loadFromFile("pipedown.png");
+    for (int i = 0; i < 5; i++) {
+        pipedown[i].setTexture(downpipe);
+        pipedown[i].setScale(1.25, 1.5);
+        pipedown[i].setOrigin(0, 800);
+    }
+    pipedown[0].setPosition(900, 750);
+    pipedown[1].setPosition(1200, 1000);
+    pipedown[2].setPosition(1500, 800);
+    pipedown[3].setPosition(1800, 750);
+    pipedown[4].setPosition(2100, 900);
+    // score
+    int score = 0;
+    Text points;
+    Font f;
+    f.loadFromFile("score font.ttf");
+    points.setFont(f);
+    string s = to_string(score);
+    points.setString("" + s);
+    points.setPosition(375, 0);
+    points.setFillColor(Color::Black);
+    int max = 0;
+    Text best;
+    best.setFont(f);
+    string d = to_string(max);
+    best.setString("" + d);
+    best.setPosition(500, 550);
+    best.setFillColor(Color::Black);
+    //restart text
+    Text restart;
+    Font ff;
+    ff.loadFromFile("flappyfont.ttf");
+    restart.setFont(ff);
+    restart.setString("press enter to try again");
+    restart.setPosition(185, 610);
+    restart.setFillColor(Color::Black);
+    // medals
+    Sprite bronze, silver, gold, platinum;
+    Texture bro, sil, gol, plat;
+    bro.loadFromFile("bronze.png");
+    sil.loadFromFile("silver.png");
+    gol.loadFromFile("gold.png");
+    plat.loadFromFile("plat medal.png");
+    bronze.setTexture(bro);
+    silver.setTexture(sil);
+    gold.setTexture(gol);
+    platinum.setTexture(plat);
+    bronze.setPosition(180, 460);
+    silver.setPosition(180, 460);
+    gold.setPosition(180, 460);
+    platinum.setPosition(180, 460);
+
+
+
+
+
+
+    Sprite floor[2], sky;
+    floor[0].setTexture(floorTxt);
+    floor[1].setTexture(floorTxt);
+    floor[0].setScale(Vector2f(1, 1.25));
+    floor[1].setScale(Vector2f(1, 1.25));
+    floor[0].setPosition(Vector2f(0, 680));
+    floor[1].setPosition(Vector2f(730, 680));
+
+    sky.setTexture(skyTxt);
+    sky.setPosition(Vector2f(0, -300));
+
+
+
+    // Variables for game logic
+    bool isJumping = false;
+    bool firstEnteredGame = false;
+    bool isGameOver = false;
+    const float gravity = 0.03f;
+    const float maxVelocityY = 10.0f;
+    bool pipemoving = false;
+
+    window.setFramerateLimit(300);
+    if (pagenum == 1000) { //main menu
+        while (window.isOpen())
+        {
+            Event event;
+            while (window.pollEvent(event)) {
+                if (event.type == Event::Closed) {
+                    window.close();
+                }
+                if (Keyboard::isKeyPressed(Keyboard::Enter)) {
+                    pagenum = 1;
+                }
+
+
+
+            }
+            window.clear();
+            if (pagenum != 1000) {
+                break;
+            }
+            window.draw(menubackground);
+            window.draw(title);
+            window.draw(playbutton);
+            window.display();
+
+        }
+    }
+    if (pagenum == 1) {
+        while (window.isOpen()) {
+            // Event handling
+            Event event;
+               while (window.pollEvent(event)) {
+                if (event.type == Event::Closed)
+                    window.close();
+                else if (event.type == Event::KeyPressed && event.key.code == Keyboard::Space) {
+                    isJumping = true;
+                    pipemoving = true;
+                }
+                else if (event.type == Event::KeyPressed && event.key.code == Keyboard::Enter && isGameOver) {
+                    // Restart the game
+                    isGameOver = false;
+                    // Reset game state, scores, positions, etc.
+                    // ...
+                    // Reset bird position
+                    flappy.bird.setPosition(310, 350);
+                    // Reset pipes position
+                    pipeup[0].setPosition(900, 250);
+                    pipeup[1].setPosition(1200, 500);
+                    pipeup[2].setPosition(1500, 300);
+                    pipeup[3].setPosition(1800, 250);
+                    pipeup[4].setPosition(2100, 400);
+                    pipedown[0].setPosition(900, 750);
+                    pipedown[1].setPosition(1200, 1000);
+                    pipedown[2].setPosition(1500, 800);
+                    pipedown[3].setPosition(1800, 750);
+                    pipedown[4].setPosition(2100, 900);
+                    pipespawn(pipeup, pipedown);
+
+                    // Reset score
+                    score = 0;
+                    // Update score display
+                    string s = to_string(score);
+                    points.setString("" + s);
+                    points.setPosition(375, 0);
+                }
+            }
+            // Bird movement
+            if (isJumping && flappy.velocity.y >= -maxVelocityY) {
+                flappy.velocity.y = -2.0f;
+                flappy.jumpTimer.restart();
+                isJumping = false;
+            }
+            else {
+                flappy.velocity.y += gravity;
+            }
+            flappy.bird.move(flappy.velocity);
+
+            if (pipemoving) {
+                for (int i = 0; i < 5; i++) {
+
+                    pipeup[i].move(-1, 0);
+                    pipedown[i].move(-1, 0);
+
+
+                }
+
+            }
+            pipespawn(pipeup, pipedown);
+
+
+            // Floor movement
+            for (int i = 0; i < 2; ++i) {
+                floor[i].move(-1, 0);
+                if (floor[i].getPosition().x <= -750)
+                    floor[i].setPosition(Vector2f(710, 680));
+            }
+            flappy.bird.setTextureRect(IntRect(x * 77, 0, 77, 54));
+            x++;
+            x %= 4;
+
+            // Bird collision with floor
+            if (flappy.bird.getGlobalBounds().intersects(floor[0].getGlobalBounds()) ||flappy.bird.getGlobalBounds().intersects(floor[1].getGlobalBounds())){
+                // If bird hits the floor, stop the bird and end the game
+                flappy.velocity.y = 0;
+
+               
+                isGameOver = true;
+
+            }
+
+            for (int i = 0; i < 5; i++) {
+                if (flappy.bird.getGlobalBounds().intersects(pipeup[i].getGlobalBounds()) || flappy.bird.getGlobalBounds().intersects(pipedown[i].getGlobalBounds())) {
+                    isGameOver = true;
+
+                }
+                if (pipeup[i].getPosition().x == flappy.bird.getPosition().x - 20 && !isGameOver) {
+                    score++;
+                    string s = to_string(score);
+                    points.setString("" + s);
+                    points.setFont(f);
+                    points.setPosition(375, 0);
+                    /*if (isGameOver) {
+                        break;
+                        score = score;
+                        string s = to_string(score);
+                        points.setString("" + s);
+                    }*/
+                }
+                if (max < score) {
+                    max = score;
+                    string d = to_string(max);
+                    best.setString("" + d);
+                }
+            }
+            if (isGameOver) {
+                // Game over screen
+                Texture sco;
+                sco.loadFromFile("score.png");
+                Sprite score1;
+                score1.setTexture(sco);
+                score1.setPosition(150, 375);
+                score1.setScale(2, 2);
+
+                Texture gameOverTxt;
+                gameOverTxt.loadFromFile("gameover.png");
+                Sprite gameOverSprite;
+                gameOverSprite.setTexture(gameOverTxt);
+                gameOverSprite.setPosition(190, 250);
+                gameOverSprite.setScale(2, 2);
+                points.setPosition(500, 450);
+
+                window.clear();
+
+                window.draw(menubackground);
+                window.draw(gameOverSprite);
+                window.draw(score1);
+                window.draw(points);
+                window.draw(best);
+                window.draw(restart);
+                if (score <= 10) {
+                    window.draw(bronze);
+                }
+                else if (score > 10 && score < 30) {
+                    window.draw(silver);
+                }
+                else if (score > 30 && score < 70) {
+                    window.draw(gold);
+                }
+                else
+                    window.draw(platinum);
+                window.display();
+            }
+
+            else {
+                // Clear, draw, and display
+                window.clear();
+
+                window.draw(sky);
+                for (int i = 0; i < 5; i++) {
+                    window.draw(pipeup[i]);
+                    window.draw(pipedown[i]);
+                }
+                for (int i = 0; i < 2; ++i)
+                    window.draw(floor[i]);
+
+                window.draw(flappy.bird);
+                window.draw(points);
+
+                window.display();
+            }
+        }
+    }
+
+}
